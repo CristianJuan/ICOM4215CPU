@@ -1,0 +1,287 @@
+module Microstore(output reg[57:0]Out,input[9:0]State);
+
+reg[57:0]ROM[0:255];
+
+initial begin
+//Select1_Select2_Select3_Select4_Select5_Select6_Select7_Select8_Select9_MAREnable_MDREnable_IREnable_LoadEnable_ASelect_MFA_RAMReadWrite_DataType_SREnable_SignExtend_CUSlave1_CUSlave2_CUSlave3 
+ 
+
+ROM[1]=58'b000_0000000010_000_01_x_xxx_011_011_10_10_11_1_0_0_0_1_0_x_xx_0_11_xxxx_xxxx_1111;//sacar PC
+
+ROM[2]=58'b000_0000000011_000_01_x_xxx_011_011_10_10_01_0_0_0_0_0_0_x_xx_0_11_xxxx_1111_xxxx;//apago el MAR sumo PC=4
+
+ROM[3]=58'b000_0000000100_000_01_x_011_011_011_10_10_01_0_0_0_1_0_0_x_xx_0_11_1111_xxxx_xxxx;// Prendo RF Enable
+
+ROM[4]=58'b000_0000000101_000_01_x_xxx_011_011_10_10_01_0_0_0_0_0_0_x_xx_0_11_xxxx_xxxx_xxxx;// Apago RF Enable
+
+ROM[5]=58'b101_0000000101_000_01_x_xxx_011_011_10_10_01_0_0_0_0_0_1_1_10_0_11_1111_1111_1111;// Leer del RAM @ MAR Wait MFC==1
+
+ROM[6]=58'b000_0000000111_000_01_x_xxx_011_011_10_10_01_0_0_1_0_0_1_1_10_0_11_xxxx_xxxx_xxx1;//Prender IR
+
+ROM[7]=58'b001_0000001000_000_01_x_xxx_011_011_10_10_01_0_0_0_0_0_1_1_10_0_11_1xxx_xxxx_1xxx;//Apagar IR IR is Loaded || Check Condition to select  Output de Instruction decode
+
+//DATA PROCESSING.
+
+ROM[10]=58'b100_0000000001_001_00_0_000_000_010_01_01_00_0_0_0_0_1_0_0_xx_1_11_xxxx_xxxx_xxxx;//Data processing immediate operaciones que no afectan Rd. Despues de esto hacer fetch 1
+
+ROM[11]=58'b100_0000000001_001_00_0_000_000_010_01_01_00_0_0_0_1_1_0_0_xx_1_11_xxxx_xxxx_xxxx;//Data processing immediate operaciones que afectan Rd y flags. Despues de esto fetch 1 pero con un delay para que escriba al RF
+
+ROM[13]=58'b100_0000000001_000_00_0_000_001_010_00_00_00_0_0_0_0_1_0_0_xx_1_xx_xxxx_xxxx_xxxx;//Data processing shift by immediate shifter operaciones que no afectan Rd. Despues de esto fetch 1
+
+ROM[14]=58'b100_0000000001_000_00_0_000_001_010_00_00_00_0_0_0_1_1_0_0_xx_1_xx_xxxx_xxxx_xxxx;//Data processing shift by immediate shifter operaciones que afectan Rd y flags. Despues de esto fetch 1 pero con delay para que escriba al RF
+
+ROM[16]=58'b100_0000000001_001_00_0_000_000_010_01_01_00_0_0_0_1_1_0_0_xx_0_11_xxxx_xxxx_xxxx;//Data processing immediate operaciones que afectan Rd y no flags. Despues de esto fetch 1 pero con un delay para que escriba.
+
+//Select1_Select2_Select3_Select4_Select5_Select6_Select7_Select8_Select9_MAREnable_MDREnable_IREnable_LoadEnable_ASelect_MFA_RAMReadWrite_DataType_SREnable_SignExtend_CUSlave1_CUSlave2_CUSlave3 
+ 
+
+ROM[18]=58'b100_0000000001_000_00_0_000_001_010_00_00_00_0_0_0_1_1_0_0_xx_0_xx_xxxx_xxxx_xxxx;//Data processing shift by immediate shifter operaciones que afectan Rd y no flags. Despues de esto fetch 1 pero con delay para que escriba al RF
+
+// FIN DE DATA PROCESSING
+
+
+///////////PRINCIPIO DE ADDRESSING MODE 2 Offset and Pre-Indexed///////////
+
+////Output Control Signals::  NextStateSelectorInput_PipeLine_Select1_Select2_Select3_Select4_Select5_Select6_Select7_Select8_Select9_MAREnable_MDREnable_IREnable_LoadEnable_ASelect_MFA_RAMReadWrite_DataType_SREnable_SignExtend_CUSlave1_CUSlave2_CUSlave3  
+
+ROM[19]=58'b010_0000011011_001_00_x_000_xxx_xxx_10_10_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Immediate Offset Suma calcular E.A
+
+ROM[20]=58'b010_0000011011_001_00_x_000_xxx_xxx_10_10_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Immediate Offset Resta Calcular E.A
+
+ROM[21]=58'b010_0000011011_000_00_x_000_001_xxx_00_00_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Register Offset Suma Calcular E.A
+
+ROM[22]=58'b010_0000011011_000_00_x_000_001_xxx_00_00_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Register Offset Resta Calcular E.A
+
+ROM[23]=58'b010_0000011011_001_00_x_000_xxx_000_10_10_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Immediate Pre-Indexed Suma Calcular E.A
+
+ROM[24]=58'b010_0000011011_001_00_x_000_xxx_000_10_10_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Immediate Pre-Indexed Resta Calcular E.A
+
+ROM[25]=58'b010_0000011011_000_00_x_000_001_000_00_00_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Register Pre-Indexed Suma Calcular E.A
+
+ROM[26]=58'b010_0000011011_000_00_x_000_001_000_00_00_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Register Pre-Indexed Resta Calcular E.A
+
+ROM[27]=58'b101_0000011011_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_x_1_1_10_0_11_xxxx_xxxx_xxxx; //Load Word Stage 2 (Cargar MDR con RAM)
+
+ROM[28]=58'b100_0000000010_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_0_xx_0_xx_xxxx_xxxx_xxxx; //Load Word Stage 3 (Pasar el MAR al Registro Rd)
+
+ROM[29]=58'b010_0000100101_001_00_x_000_xxx_xxx_10_10_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Immediate Offset Suma calcular E.A
+
+ROM[30]=58'b010_0000100101_001_00_x_000_xxx_xxx_10_10_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Immediate Offset Resta Calcular E.A
+
+ROM[31]=58'b010_0000100101_000_00_x_000_001_xxx_00_00_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Register Offset Suma Calcular E.A
+
+ROM[32]=58'b010_0000100101_000_00_x_000_001_xxx_00_00_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Register Offset Resta Calcular E.A
+
+ROM[33]=58'b010_0000100101_001_00_x_000_xxx_000_10_10_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Immediate Pre-Indexed Suma Calcular E.A
+
+ROM[34]=58'b010_0000100101_001_00_x_000_xxx_000_10_10_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Immediate Pre-Indexed Resta Calcular E.A
+
+ROM[35]=58'b010_0000100101_000_00_x_000_001_000_00_00_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Register Pre-Indexed Suma Calcular E.A
+
+ROM[36]=58'b010_0000100101_000_00_x_000_001_000_00_00_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Register Pre-Indexed Resta Calcular E.A
+
+ROM[37]=58'b101_0000100101_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_x_1_1_00_0_11_xxxx_xxxx_xxxx; //Load Byte Stage 2 (Cargar MDR con RAM)
+
+ROM[38]=58'b100_0000000010_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_0_xx_0_xx_xxxx_xxxx_xxxx; //Load Byte Stage 3 (Pasar el MAR al Registro Rd)
+
+ROM[39]=58'b010_0000101111_001_00_x_000_xxx_xxx_10_10_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Immediate Offset Suma calcular E.A
+
+ROM[40]=58'b010_0000101111_001_00_x_000_xxx_xxx_10_10_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Immediate Offset Resta Calcular E.A
+
+ROM[41]=58'b010_0000101111_000_00_x_000_001_xxx_00_00_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Register Offset Suma Calcular E.A
+
+ROM[42]=58'b010_0000101111_000_00_x_000_001_xxx_00_00_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Register Offset Resta Calcular E.A
+
+ROM[43]=58'b010_0000101111_001_00_x_000_xxx_000_10_10_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Immediate Pre-Indexed Suma Calcular E.A
+
+ROM[44]=58'b010_0000101111_001_00_x_000_xxx_000_10_10_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Immediate Pre-Indexed Resta Calcular E.A
+
+ROM[45]=58'b010_0000101111_000_00_x_000_001_000_00_00_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Register Pre-Indexed Suma Calcular E.A
+
+ROM[46]=58'b010_0000101111_000_00_x_000_001_000_00_00_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Register Pre-Indexed Resta Calcular E.A
+
+ROM[47]=58'b011_0000101111_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Word Stage 2 (Cargar MDR con Rd)
+
+ROM[48]=58'b110_0000000010_xxx_xx_x_xxx_xxx_xxx_10_10_xx_0_0_0_0_0_1_0_10_0_xx_xxxx_xxxx_xxxx; //Store Word Stage 3 (Cargar RAM con MDR)
+
+ROM[49]=58'b010_0000111001_001_00_x_000_xxx_xxx_10_10_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Immediate Offset Suma calcular E.A
+
+ROM[50]=58'b010_0000111001_001_00_x_000_xxx_xxx_10_10_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Immediate Offset Resta Calcular E.A
+
+ROM[51]=58'b010_0000111001_000_00_x_000_001_xxx_00_00_01_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Register Offset Suma Calcular E.A
+
+ROM[52]=58'b010_0000111001_000_00_x_000_001_xxx_00_00_10_1_0_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Register Offset Resta Calcular E.A
+
+ROM[53]=58'b010_0000111001_001_00_x_000_xxx_000_10_10_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Immediate Pre-Indexed Suma Calcular E.A
+
+ROM[54]=58'b010_0000111001_001_00_x_000_xxx_000_10_10_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Immediate Pre-Indexed Resta Calcular E.A
+
+ROM[55]=58'b010_0000111001_000_00_x_000_001_000_00_00_01_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Register Pre-Indexed Suma Calcular E.A
+
+ROM[56]=58'b010_0000111001_000_00_x_000_001_000_00_00_10_1_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Register Pre-Indexed Resta Calcular E.A
+
+ROM[57]=58'b011_0000111001_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx; //Store Byte Stage 2 (Cargar MDR con Rd)
+
+ROM[58]=58'b110_0000000010_xxx_xx_x_xxx_xxx_xxx_10_10_xx_0_0_0_0_0_1_0_00_0_xx_xxxx_xxxx_xxxx; //Store Byte Stage 3 (Cardar RAM con MDR)
+//FIN DE LOAD/STORE ADDRESSING MODE 2 PRE-INDEXED Y OFFSET
+
+// BRANCH Y BRANCH AND LINK
+
+ROM[70]=58'b011_0000000001_010_00_x_011_xxx_011_xx_xx_01_0_0_0_0_0_0_x_xx_0_11_xxxx_xxxx_xxxx;// Branch No link 2 stages ASelect==1SALE Lo que entra en B de ALU si Select9 es 11b  A_Select==0SALE Lo que entra en A de ALU si Select9 es 11b 
+
+ROM[71]=58'b100_0000000001_010_00_x_011_xxx_011_xx_xx_01_0_0_0_1_0_0_x_xx_0_11_xxxx_xxxx_xxxx;// Branch No link Prendo RF. Despues de esto ir a fetch 1
+
+ROM[72]=58'b011_0000000001_000_00_x_011_xxx_100_xx_xx_11_0_0_0_0_0_0_x_xx_0_11_xxxx_xxxx_xxxx;//Branch and Link Stage 1
+
+ROM[73]=58'b011_0000000010_000_00_x_011_xxx_100_xx_xx_11_0_0_0_1_0_0_x_xx_0_11_xxxx_xxxx_xxxx;//Branch and Link Stage 2
+
+ROM[74]=58'b011_0000000011_010_00_x_011_xxx_011_xx_xx_01_0_0_0_0_0_0_x_xx_0_11_xxxx_xxxx_xxxx;// Branch and Link Stage 3
+
+ROM[75]=58'b100_0000000100_010_00_x_011_xxx_011_xx_xx_01_0_0_0_1_0_0_x_xx_0_11_xxxx_xxxx_xxxx;//Branch and Link Stage 4 despues ir a fetch 1
+
+//FIN DE BRANCH Y BRANCH AND LINK
+
+//LOAD STORE ADDRESSING MODE 2 POST INDEXED ADDRESSING
+////Output Control Signals::  NextStateSelectorInput_PipeLine_Select1_Select2_Select3_Select4_Select5_Select6_Select7_Select8_Select9_MAREnable_MDREnable_IREnable_LoadEnable_ASelect_MFA_RAMReadWrite_DataType_SREnable_SignExtend_CUSlave1_CUSlave2_CUSlave3 
+
+ROM[79]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Word Immediate Post-Indexed Suma E.A
+
+ROM[80]=58'b101_0001010000_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_10_0_11_xxxx_xxxx_xxxx;//Load Word Immediate Post-Indexed Suma Stage 2 Cargar MDR con RAM
+
+ROM[81]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Immediate Post-Indexed Suma Stage 3 Pasar de MDR a Rd
+
+ROM[82]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Immediate Post-Indexed Suma Update Rn
+
+ROM[83]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Word Immediate Post-Indexed Resta E.A
+
+ROM[84]=58'b101_0001010100_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_10_0_11_xxxx_xxxx_xxxx;//Load Word Immediate Post-Indexed Resta Stage 2 Cargar MDR con RAM
+
+ROM[85]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Immediate Post-Indexed Resta Stage 3 Pasar de MDR a Rd
+
+ROM[86]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Immediate Post-Indexed Resta Update Rn
+
+ROM[87]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Word Register Post-Indexed Suma E.A
+
+ROM[88]=58'b101_0001011000_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_10_0_11_xxxx_xxxx_xxxx;//Load Word Register Post-Indexed Suma Stage 2 Cargar MDR con RAM
+
+ROM[89]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Register Post-Indexed Suma Stage 3 Pasar de MDR a Rd
+
+ROM[90]=58'b100_0000000100_000_00_x_000_001_000_10_10_01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Register Post-Indexed Suma Update Rn
+
+ROM[91]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Word Register Post-Indexed Resta E.A
+
+ROM[92]=58'b101_0001011100_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_10_0_11_xxxx_xxxx_xxxx;//Load Word Register Post-Indexed Resta Stage 2 Cargar MDR con RAM
+
+ROM[93]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Register Post-Indexed Resta Stage 3 Pasar de MDR a Rd
+
+ROM[94]=58'b100_0000000100_000_00_x_000_001_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Word Register Post-Indexed Resta Update Rn
+
+ROM[95]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Byte Immediate Post-Indexed Suma E.A
+
+ROM[96]=58'b101_0001100000_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_00_0_11_xxxx_xxxx_xxxx;//Load Byte Immediate Post-Indexed Suma Stage 2 Cargar MDR con RAM
+
+ROM[97]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Immediate Post-Indexed Suma Stage 3 Pasar de MDR a Rd
+
+ROM[98]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Immediate Post-Indexed Suma Update Rn
+
+ROM[99]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Byte Immediate Post-Indexed Resta E.A
+
+ROM[100]=58'b101_0001100100_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_00_0_11_xxxx_xxxx_xxxx;//Load Byte Immediate Post-Indexed Resta Stage 2 Cargar MDR con RAM
+
+ROM[101]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Immediate Post-Indexed Resta Stage 3 Pasar de MDR a Rd
+
+ROM[102]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Immediate Post-Indexed Resta Update Rn
+
+ROM[103]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Byte Register Post-Indexed Suma E.A
+
+ROM[104]=58'b101_0001101000_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_00_0_11_xxxx_xxxx_xxxx;//Load Byte Register Post-Indexed Suma Stage 2 Cargar MDR con RAM
+
+ROM[105]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Register Post-Indexed Suma Stage 3 Pasar de MDR a Rd
+
+ROM[106]=58'b100_0000000100_000_00_x_000_001_000_10_10_01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Register Post-Indexed Suma Update Rn
+
+ROM[107]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Load Byte Register Post-Indexed Resta E.A
+
+ROM[108]=58'b101_0001101100_000_00_1_xxx_xxx_xxx_10_10_xx_0_1_0_0_0_1_1_00_0_11_xxxx_xxxx_xxxx;//Load Byte Register Post-Indexed Resta Stage 2 Cargar MDR con RAM
+
+ROM[109]=58'b011_0000000011_011_00_x_xxx_xxx_010_10_10_11_0_0_0_1_1_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Register Post-Indexed Resta Stage 3 Pasar de MDR a Rd
+
+ROM[110]=58'b100_0000000100_000_00_x_000_001_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Load Byte Register Post-Indexed Resta Update Rn
+
+ROM[111]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Word Immediate Post-Indexed Suma E.A
+
+ROM[112]=58'b011_0001110000_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Immediate Post-Indexed Suma Stage 2 Cargar MDR con Rd
+
+ROM[113]=58'b111_0001110001_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_10_0_xx_xxxx_xxxx_xxxx;//Store Word Immediate Post-Indexed Suma Stage 3 Pasar de MDR a RAM
+
+ROM[114]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Immediate Post-Indexed Suma Update Rn
+
+ROM[115]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Word Immediate Post-Indexed Resta E.A
+
+ROM[116]=58'b011_0001110100_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Immediate Post-Indexed Resta Stage 2 Cargar MDR con Rd
+
+ROM[117]=58'b111_0001110101_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_10_0_xx_xxxx_xxxx_xxxx;//Store Word Immediate Post-Indexed Resta Stage 3 Pasar de MDR a RAM
+
+ROM[118]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Immediate Post-Indexed Resta Update Rn
+
+ROM[119]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Word Register Post-Indexed Suma E.A
+
+ROM[120]=58'b011_0001111000_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Register Post-Indexed Suma Stage 2 Cargar MDR con Rd
+
+ROM[121]=58'b111_0001111001_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_10_0_xx_xxxx_xxxx_xxxx;//Store Word Register Post-Indexed Suma Stage 3 Pasar de MDR a RAM
+
+ROM[122]=58'b100_0000000100_001_00_x_000_001_000_10_10_01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Register Post-Indexed Suma Update Rn
+
+ROM[123]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Word Register Post-Indexed Resta E.A
+
+ROM[124]=58'b011_0001111100_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Register Post-Indexed Resta Stage 2 Cargar MDR con Rd
+
+ROM[125]=58'b111_0001111101_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_10_0_xx_xxxx_xxxx_xxxx;//Store Word Register Post-Indexed Resta Stage 3 Pasar de MDR a RAM
+
+ROM[126]=58'b100_0000000100_001_00_x_000_001_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Word Register Post-Indexed Resta Update Rn
+
+ROM[127]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Byte Immediate Post-Indexed Suma E.A
+
+ROM[128]=58'b011_0010000000_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Immediate Post-Indexed Suma Stage 2 Cargar MDR con Rd
+
+ROM[129]=58'b111_0010000001_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_00_0_xx_xxxx_xxxx_xxxx;//Store Byte Immediate Post-Indexed Suma Stage 3 Pasar de MDR a RAM
+
+ROM[130]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Immediate Post-Indexed Suma Update Rn
+
+ROM[131]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Byte Immediate Post-Indexed Resta E.A
+
+ROM[132]=58'b011_0010000100_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Immediate Post-Indexed Resta Stage 2 Cargar MDR con Rd
+
+ROM[133]=58'b111_0010000101_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_00_0_xx_xxxx_xxxx_xxxx;//Store Byte Immediate Post-Indexed Resta Stage 3 Pasar de MDR a RAM
+
+ROM[134]=58'b100_0000000100_001_00_x_000_xxx_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Immediate Post-Indexed Resta Update Rn
+
+ROM[135]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Byte Register Post-Indexed Suma E.A
+
+ROM[136]=58'b011_0010001000_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Register Post-Indexed Suma Stage 2 Cargar MDR con Rd
+
+ROM[137]=58'b111_0010001001_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_00_0_xx_xxxx_xxxx_xxxx;//Store Byte Register Post-Indexed Suma Stage 3 Pasar de MDR a RAM
+
+ROM[138]=58'b100_0000000100_001_00_x_000_001_000_10_10__01_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Register Post-Indexed Suma Update Rn
+
+ROM[139]=58'b011_0000000001_000_00_x_000_xxx_xxx_10_10_11_1_0_0_0_0_0_x_xx_0_xx_XXXX_XXXX_XXXX;//Store Byte Register Post-Indexed Resta E.A
+
+ROM[140]=58'b011_0010001100_000_00_0_010_xxx_xxx_10_10_11_0_1_0_0_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Register Post-Indexed Resta Stage 2 Cargar MDR con Rd
+
+ROM[141]=58'b111_0010001101_000_00_0_xxx_xxx_xxx_10_10_11_0_0_0_0_0_1_0_00_0_xx_xxxx_xxxx_xxxx;//Store Byte Register Post-Indexed Resta Stage 3 Pasar de MDR a RAM
+
+ROM[142]=58'b100_0000000100_001_00_x_000_001_000_10_10_10_0_0_0_1_0_0_x_xx_0_xx_xxxx_xxxx_xxxx;//Store Byte Register Post-Indexed Resta Update Rn
+
+end
+
+always@(State)begin
+//$display("ARM Microstore State:%d",State);
+
+Out=ROM[State];
+if(State == 142 || State == 138 || State == 134 || State == 130 || State == 126 || State == 122 || State == 118 || State == 114 || State == 110 || State == 106 || State == 102 || State == 98 || State == 94 || State == 90 || State == 86 || State == 82) begin
+$display("Updating Rn");
+end
+//$display("ARM CU Signal Output:%b",Out[44:0]);
+end
+
+endmodule

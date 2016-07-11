@@ -1,0 +1,1 @@
+Los documentos de excel muestran las señales de control que enviaria cada uno de los estados del ASMD.
